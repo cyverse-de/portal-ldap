@@ -10,7 +10,9 @@ import datetime
 
 
 def connect(ldap_url, ldap_user, ldap_password):
-    conn = ldap.initialize(ldap_url)
+    ldap.set_option(ldap.OPT_TIMEOUT, None)
+
+    conn = ldap.ldapobject.ReconnectLDAPObject(ldap_url, retry_max=5, retry_delay=3.0)
     conn.set_option(ldap.OPT_REFERRALS, 0)
     conn.simple_bind_s(ldap_user, ldap_password)
     return conn
