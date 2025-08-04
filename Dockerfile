@@ -25,4 +25,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-CMD ["fastapi", "dev", "--host", "0.0.0.0", "src/portal-ldap"]
+CMD ["fastapi", "dev", "--host", "0.0.0.0", "main.py"]
