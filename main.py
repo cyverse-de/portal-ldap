@@ -16,6 +16,11 @@ ldap_base_dn = os.environ.get("LDAP_BASE_DN")
 ldap_conn = portal_ldap.connect(ldap_url, ldap_user, ldap_pass)
 
 
+@app.get("/", status_code=201)
+def hello():
+    return "Hello from portal-ldap."
+
+
 @app.post("/users", status_code=status.HTTP_201_CREATED)
 def create_user(user: kinds.CreateUserRequest):
     dse = f"{portal_ldap.days_since_epoch()}"
