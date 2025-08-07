@@ -43,6 +43,7 @@ def add_user_to_group(group_name: str, user_info: kinds.SimpleUser):
         raise HTTPException(
             status_code=400, detail=f"desc: '{err.desc}', info: '{err.info}'"
         )
+    return {"group" : group_name, "user" : user_info.username}
 
 
 @app.delete("/users/{username}")
@@ -78,3 +79,4 @@ def shadow_last_change(user_id: str):
         raise HTTPException(
             status_code=400, detail=f"desc: '{err.desc}', info: '{err.info}'"
         )
+    return {"user" : user_id}
