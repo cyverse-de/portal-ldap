@@ -135,6 +135,20 @@ def add_user_to_group(conn, base_dn, username, group):
     )
 
 
+def remove_user_from_group(conn, base_dn, username, group):
+    mod_group = [
+        (
+            ldap.MOD_DELETE,
+            "memberUid",
+            [username.encode("UTF-8")],
+        )
+    ]
+    return conn.modify_s(
+        f"cn={group},ou=Groups,{base_dn}",
+        mod_group,
+    )
+
+
 def delete_user(conn, base_dn, username):
     return conn.delete_s(
         f"uid={username},ou=People,{base_dn}",

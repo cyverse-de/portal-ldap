@@ -44,17 +44,41 @@ def list_users():
     return {"users": users}
 
 
-@app.post("/groups/{group_name}", status_code=200)
-def add_user_to_group(group_name: str, user_info: kinds.SimpleUser):
+@app.get("/groups", status_code=200)
+def list_groups():
+    try:
+        groups = portal_ldap.get_groups(ldap_conn, ldap_base_dn)
+    except LDAPError as err:
+        raise HTTPException(
+            status_code=400, detail=f"desc: '{err.desc}', info: '{err.info}'"
+        )
+    return {"groups": groups}
+
+
+@app.post("/groups/{group_name}/users/{username}", status_code=200)
+def add_user_to_group(group_name: str, username: str):
     try:
         portal_ldap.add_user_to_group(
-            ldap_conn, ldap_base_dn, user_info.user, group_name
+            ldap_conn, ldap_base_dn, username, group_name
         )
     except LDAPError as err:
         raise HTTPException(
             status_code=400, detail=f"desc: '{err.desc}', info: '{err.info}'"
         )
-    return {"group": group_name, "user": user_info.user}
+    return {"group": group_name, "user": username}
+
+
+@app.delete("/groups/{group_name}/users/{username}", status_code=200)
+def remove_user_from_group(username: str, group: str):
+    try:
+        portal_ldap.remove_user_from_group(
+            ldap_conn, ldap_base_dn, username, group
+        )
+    except LDAPError as err:
+        raise HTTPException(
+            status_code=400, detail=f"desc: '{err.desc}', info: '{err.info}'"
+        )
+    return {"group": group, "username": username}
 
 
 @app.delete("/users/{username}")
@@ -75,9 +99,7 @@ def change_password(username: str, password: kinds.SimplePassword):
             ldap_conn, ldap_base_dn, username, password.password
         )
     except LDAPError as err:
-        raise HTTPException(
-            status_code=400, detail=f"desc: '{err.desc}', info: '{err.info}'"
-        )
+        raise HTTPException(status_code=400, detail=f"{err}")
     return {"user": username}
 
 
