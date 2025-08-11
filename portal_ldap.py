@@ -12,7 +12,9 @@ import datetime
 def connect(ldap_url, ldap_user, ldap_password):
     ldap.set_option(ldap.OPT_TIMEOUT, None)
 
-    conn = ldap.ldapobject.ReconnectLDAPObject(ldap_url, retry_max=5, retry_delay=3.0)
+    conn = ldap.ldapobject.ReconnectLDAPObject(
+        ldap_url, retry_max=5, retry_delay=3.0
+    )
     conn.set_option(ldap.OPT_REFERRALS, 0)
     conn.simple_bind_s(ldap_user, ldap_password)
     return conn
@@ -68,7 +70,9 @@ def get_groups(
     attrlist=default_group_attrlist,
 ):
     search_filter = "(&(objectClass=posixGroup))"
-    return conn.search_s(base_dn, ldap.SCOPE_SUBTREE, search_filter, attrlist=attrlist)
+    return conn.search_s(
+        base_dn, ldap.SCOPE_SUBTREE, search_filter, attrlist=attrlist
+    )
 
 
 def get_user(conn, base_dn, username: str):
@@ -76,10 +80,19 @@ def get_user(conn, base_dn, username: str):
     return conn.search_s(base_dn, ldap.SCOPE_SUBTREE, search_filter)
 
 
+def list_users(conn, base_dn: str):
+    search_filter = "(&(objectClass=posixAccount))"
+    return conn.search_s(base_dn, ldap.SCOPE_SUBTREE, search_filter)
+
+
 def create_user(conn, base_dn, days_since_epoch, user: kinds.CreateUserRequest):
     new_user = ldap.modlist.addModlist(
         {
-            "objectClass": [b"posixAccount", b"shadowAccount", b"inetOrgPerson"],
+            "objectClass": [
+                b"posixAccount",
+                b"shadowAccount",
+                b"inetOrgPerson",
+            ],
             "givenName": user.first_name.encode("UTF-8"),
             "sn": user.last_name.encode("UTF-8"),
             "cn": f"{user.first_name} {user.last_name}".encode("UTF-8"),

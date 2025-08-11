@@ -33,17 +33,28 @@ def create_user(user: kinds.CreateUserRequest):
     return {"user": user.username}
 
 
+@app.get("/users", status_code=200)
+def list_users():
+    try:
+        users = portal_ldap.list_users(ldap_conn, ldap_base_dn)
+    except LDAPError as err:
+        raise HTTPException(
+            status_code=400, detail=f"desc: '{err.desc}' info: '{err.info}'"
+        )
+    return {"users": users}
+
+
 @app.post("/groups/{group_name}", status_code=200)
 def add_user_to_group(group_name: str, user_info: kinds.SimpleUser):
     try:
         portal_ldap.add_user_to_group(
-            ldap_conn, ldap_base_dn, user_info.username, group_name
+            ldap_conn, ldap_base_dn, user_info.user, group_name
         )
     except LDAPError as err:
         raise HTTPException(
             status_code=400, detail=f"desc: '{err.desc}', info: '{err.info}'"
         )
-    return {"group" : group_name, "user" : user_info.username}
+    return {"group": group_name, "user": user_info.user}
 
 
 @app.delete("/users/{username}")
@@ -79,4 +90,4 @@ def shadow_last_change(user_id: str):
         raise HTTPException(
             status_code=400, detail=f"desc: '{err.desc}', info: '{err.info}'"
         )
-    return {"user" : user_id}
+    return {"user": user_id}
