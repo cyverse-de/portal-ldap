@@ -80,9 +80,14 @@ def get_user(conn, base_dn, username: str):
     return conn.search_s(base_dn, ldap.SCOPE_SUBTREE, search_filter)
 
 
-def list_users(conn, base_dn: str):
+list_user_attrs = ["uid", "uidNumber"]
+
+
+def list_users(conn, base_dn: str, attrlist=list_user_attrs):
     search_filter = "(&(objectClass=posixAccount))"
-    return conn.search_s(base_dn, ldap.SCOPE_SUBTREE, search_filter)
+    return conn.search_s(
+        base_dn, ldap.SCOPE_SUBTREE, search_filter, attrlist=attrlist
+    )
 
 
 def create_user(conn, base_dn, days_since_epoch, user: kinds.CreateUserRequest):
