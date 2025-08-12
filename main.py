@@ -44,6 +44,15 @@ def list_users():
     return {"users": users}
 
 
+@app.get("/users/{username}", status_code=200)
+def get_user(username: str):
+    try:
+        user = portal_ldap.get_user(ldap_conn, ldap_base_dn, username)
+    except LDAPError as err:
+        raise HTTPException(status_code=400, detail=f"{err}")
+    return {"user": user}
+
+
 @app.get("/groups", status_code=200)
 def list_groups():
     try:
