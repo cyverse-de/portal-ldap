@@ -86,7 +86,7 @@ def add_user_to_group(group_name: str, username: str):
     return {"group": group_name, "user": username}
 
 
-@app.delete("/groups/{group_name}/users/{username}", status_code=200)
+@app.delete("/groups/{group}/users/{username}", status_code=200)
 def remove_user_from_group(username: str, group: str):
     try:
         portal_ldap.remove_user_from_group(
