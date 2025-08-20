@@ -1,23 +1,20 @@
-from ldap import LDAPError
-
-import portal_ldap
-import kinds
 import os
+import sys
 
-from fastapi import FastAPI, HTTPException, status, Request
+from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from pydantic import BaseModel
+
+import kinds
+import portal_ldap
 
 app = FastAPI()
 
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    print(exc)
-    return JSONResponse(
-        content={"detail": exc.detail}, status_code=exc.status_code
-    )
+    print(exc, file=sys.stderr)
+    return JSONResponse(content={"detail": exc.detail}, status_code=exc.status_code)
 
 
 @app.middleware("http")
@@ -29,10 +26,10 @@ async def exception_handling_middleware(request: Request, call_next):
         return JSONResponse(content=str(e), status_code=500)
 
 
-ldap_url = os.environ.get("LDAP_URL")
-ldap_user = os.environ.get("LDAP_USER")
-ldap_pass = os.environ.get("LDAP_PASSWORD")
-ldap_base_dn = os.environ.get("LDAP_BASE_DN")
+ldap_url = os.environ.get("LDAP_URL") or ""
+ldap_user = os.environ.get("LDAP_USER") or ""
+ldap_pass = os.environ.get("LDAP_PASSWORD") or ""
+ldap_base_dn = os.environ.get("LDAP_BASE_DN") or ""
 
 ldap_conn = portal_ldap.connect(ldap_url, ldap_user, ldap_pass)
 
@@ -93,9 +90,7 @@ def delete_user(username: str):
 
 @app.put("/users/{username}/password", status_code=200)
 def change_password(username: str, password: kinds.SimplePassword):
-    portal_ldap.change_password(
-        ldap_conn, ldap_base_dn, username, password.password
-    )
+    portal_ldap.change_password(ldap_conn, ldap_base_dn, username, password.password)
     return {"user": username}
 
 
