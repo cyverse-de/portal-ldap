@@ -47,6 +47,28 @@ def days_since_epoch():
     return diff.days
 
 
+def validate_uid_number(user_uid: str) -> int:
+    """Validate and convert uidNumber to ensure it's a valid positive integer."""
+    try:
+        uid_number = int(user_uid)
+        if uid_number <= 0:
+            raise ValueError(f"uidNumber must be a positive integer, got: {user_uid}")
+        return uid_number
+    except (ValueError, TypeError) as e:
+        raise ValueError(f"Invalid uidNumber '{user_uid}': must be a positive integer") from e
+
+
+def validate_shadow_last_change(days_since_epoch) -> int:
+    """Validate and convert shadowLastChange to ensure it's a valid non-negative integer."""
+    try:
+        shadow_last_change = int(days_since_epoch) if isinstance(days_since_epoch, str) else days_since_epoch
+        if shadow_last_change < 0:
+            raise ValueError(f"shadowLastChange must be non-negative, got: {shadow_last_change}")
+        return shadow_last_change
+    except (ValueError, TypeError) as e:
+        raise ValueError(f"Invalid shadowLastChange '{days_since_epoch}': must be a non-negative integer") from e
+
+
 # Returns a list of tuples of the format: (dn, attribute map). The attribute map contains
 # key-value pairs with the keys coming from the attrlist parameter. The attrlist
 # parameter excludes the memberUid attribute because it's likely to be a huge list of
@@ -91,6 +113,10 @@ def list_users(conn, base_dn: str, attrlist=list_user_attrs):
 
 
 def create_user(conn, base_dn, days_since_epoch, user: kinds.CreateUserRequest):
+    # Validate input parameters
+    uid_number = validate_uid_number(user.user_uid)
+    shadow_last_change = validate_shadow_last_change(days_since_epoch)
+    
     new_user = ldap.modlist.addModlist(
         {
             "objectClass": [
@@ -110,8 +136,8 @@ def create_user(conn, base_dn, days_since_epoch, user: kinds.CreateUserRequest):
             "homeDirectory": f"/home/{user.username}".encode("UTF-8"),
             "loginShell": b"/bin/bash",
             "gidNumber": b"10013",
-            "uidNumber": user.user_uid.encode("UTF-8"),
-            "shadowLastChange": days_since_epoch.encode("UTF-8"),
+            "uidNumber": str(uid_number).encode("UTF-8"),
+            "shadowLastChange": str(shadow_last_change).encode("UTF-8"),
             "shadowMin": b"1",
             "shadowMax": b"730",
             "shadowInactive": b"10",
@@ -160,6 +186,9 @@ def change_password(conn, base_dn, username, password):
 
 
 def shadow_last_change(conn, base_dn, days_since_epoch, username):
+    # Validate input parameter
+    shadow_last_change_value = validate_shadow_last_change(days_since_epoch)
+    
     mod_shadow = [
         (
             ldap.MOD_DELETE,
@@ -169,7 +198,7 @@ def shadow_last_change(conn, base_dn, days_since_epoch, username):
         (
             ldap.MOD_ADD,
             "shadowLastChange",
-            [days_since_epoch.encode("UTF-8")],
+            [str(shadow_last_change_value).encode("UTF-8")],
         ),
     ]
     return conn.modify_s(
